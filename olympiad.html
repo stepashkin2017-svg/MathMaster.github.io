@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathMaster | Олимпиадная математика</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <header class="header">
+        <div class="container header-content animate-fade-down">
+            <a href="../index.html" class="logo">Math<span>Master</span></a>
+            <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+            <nav class="nav" id="main-nav">
+                <a href="../index.html#hero">Главная</a>
+                <a href="../index.html#courses">Курсы</a>
+                <a href="../index.html#practice">Практика</a>
+                <a href="../index.html#calculator">Калькулятор</a>
+                <a href="../index.html#progress">Прогресс</a>
+            </nav>
+            <div class="header-right">
+                <button class="btn btn-outline" onclick="openAuthModal()" id="auth-btn">Войти</button>
+                <button class="btn btn-primary" onclick="openProfileModal()" id="profile-btn" style="display: none;"><i data-lucide="user"></i></button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <section class="section course-detail">
+            <div class="container">
+                <div class="course-detail-header"><h1>Олимпиадная математика</h1><p class="course-detail-desc">Нестандартные задачи и логические головоломки для развития мышления.</p></div>
+                <div class="course-tabs"><button class="course-tab active" onclick="showTab('theory')">Теория</button><button class="course-tab" onclick="showTab('tasks')">Задачи</button></div>
+                <div id="theory" class="tab-content active">
+                    <div class="theory-content">
+                        <h2>1. Принцип Дирихле</h2>
+                        <p>Если кролики рассажены в клетки, и кроликов больше, чем клеток, то в какой-то клетке находится более одного кролика.</p>
+                        <h2>2. Метод математической индукции</h2>
+                        <p>База индукции, индукционный переход – основа доказательств для натуральных чисел.</p>
+                        <h2>3. Логические задачи</h2>
+                        <p>Используйте таблицы истинности, перебор вариантов и симметрию.</p>
+                    </div>
+                </div>
+                <div id="tasks" class="tab-content">
+                    <div class="tasks-list">
+                        <div class="task-item"><div class="task-question">Сколькими нулями оканчивается число \(10!\) (факториал 10)?</div><input type="text" class="task-answer" placeholder="Ответ"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '2', 'olympiad')">Проверить</button><div class="task-feedback"></div></div>
+                        <div class="task-item"><div class="task-question">Решите уравнение: \(x^2 - 5x + 6 = 0\). Укажите оба корня через запятую.</div><input type="text" class="task-answer" placeholder="x1, x2"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '2,3', 'olympiad')">Проверить</button><div class="task-feedback"></div></div>
+                        <div class="task-item"><div class="task-question">Найдите сумму всех целых чисел от 1 до 100.</div><input type="text" class="task-answer" placeholder="Ответ"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '5050', 'olympiad')">Проверить</button><div class="task-feedback"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="../script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkAuthState();
+            if (window.MathJax) MathJax.typesetPromise();
+            createBackgroundSymbols();
+        });
+        function showTab(tabName) {
+            document.querySelectorAll('.course-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`.course-tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            if (window.MathJax) MathJax.typesetPromise();
+        }
+    </script>
+</body>
+</html>

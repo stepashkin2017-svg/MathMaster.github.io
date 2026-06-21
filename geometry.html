@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathMaster | Геометрия</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <header class="header">
+        <div class="container header-content animate-fade-down">
+            <a href="../index.html" class="logo">Math<span>Master</span></a>
+            <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+            <nav class="nav" id="main-nav">
+                <a href="../index.html#hero">Главная</a>
+                <a href="../index.html#courses">Курсы</a>
+                <a href="../index.html#practice">Практика</a>
+                <a href="../index.html#calculator">Калькулятор</a>
+                <a href="../index.html#progress">Прогресс</a>
+            </nav>
+            <div class="header-right">
+                <button class="btn btn-outline" onclick="openAuthModal()" id="auth-btn">Войти</button>
+                <button class="btn btn-primary" onclick="openProfileModal()" id="profile-btn" style="display: none;"><i data-lucide="user"></i></button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <section class="section course-detail">
+            <div class="container">
+                <div class="course-detail-header"><h1>Геометрия</h1><p class="course-detail-desc">От плоских фигур до тел вращения. Развиваем пространственное мышление.</p></div>
+                <div class="course-tabs"><button class="course-tab active" onclick="showTab('theory')">Теория</button><button class="course-tab" onclick="showTab('tasks')">Задачи</button></div>
+                <div id="theory" class="tab-content active">
+                    <div class="theory-content">
+                        <h2>1. Треугольники</h2>
+                        <p>Сумма углов треугольника равна \(180^\circ\).</p>
+                        <h2>2. Теорема Пифагора</h2>
+                        <p>В прямоугольном треугольнике: \(a^2 + b^2 = c^2\).</p>
+                        <h2>3. Площади фигур</h2>
+                        <p>Площадь прямоугольника: \(S = a \cdot b\).</p>
+                        <p>Площадь треугольника: \(S = \frac{1}{2} a h\).</p>
+                        <p>Площадь круга: \(S = \pi r^2\).</p>
+                    </div>
+                </div>
+                <div id="tasks" class="tab-content">
+                    <div class="tasks-list">
+                        <div class="task-item"><div class="task-question">Катеты прямоугольного треугольника равны 3 и 4. Найдите гипотенузу.</div><input type="text" class="task-answer" placeholder="Ваш ответ"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '5', 'geometry')">Проверить</button><div class="task-feedback"></div></div>
+                        <div class="task-item"><div class="task-question">Найдите площадь треугольника с основанием 6 и высотой 5.</div><input type="text" class="task-answer" placeholder="Ответ"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '15', 'geometry')">Проверить</button><div class="task-feedback"></div></div>
+                        <div class="task-item"><div class="task-question">Радиус круга 7. Найдите его площадь (округлите до целых).</div><input type="text" class="task-answer" placeholder="Ответ"><button class="btn btn-primary btn-sm" onclick="checkCourseTask(this, '154', 'geometry')">Проверить</button><div class="task-feedback"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="../script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkAuthState();
+            if (window.MathJax) MathJax.typesetPromise();
+            createBackgroundSymbols();
+        });
+        function showTab(tabName) {
+            document.querySelectorAll('.course-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`.course-tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            if (window.MathJax) MathJax.typesetPromise();
+        }
+    </script>
+</body>
+</html>
