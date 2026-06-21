@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathMaster | Интерактивное изучение математики</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div id="auth-modal" class="modal-overlay auth-modal">
+        <div class="modal-content auth-content">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Вход</button>
+                <button class="auth-tab" data-tab="register">Регистрация</button>
+            </div>
+            <div id="login-form" class="auth-form active">
+                <h3>Войти в аккаунт</h3>
+                <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="student@email.com"></div>
+                <div class="form-group"><label>Пароль</label><input type="password" id="login-password" placeholder="••••••••"></div>
+                <button class="btn btn-primary auth-submit" onclick="login()">Войти</button>
+                <p class="auth-note">Нет аккаунта? <a href="#" onclick="switchAuthTab('register')">Зарегистрироваться</a></p>
+            </div>
+            <div id="register-form" class="auth-form">
+                <h3>Создать аккаунт</h3>
+                <div class="form-group"><label>Имя</label><input type="text" id="register-name" placeholder="Алексей"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="register-email" placeholder="student@email.com"></div>
+                <div class="form-group"><label>Пароль</label><input type="password" id="register-password" placeholder="••••••••"></div>
+                <button class="btn btn-primary auth-submit" onclick="register()">Создать аккаунт</button>
+                <p class="auth-note">Уже есть аккаунт? <a href="#" onclick="switchAuthTab('login')">Войти</a></p>
+            </div>
+        </div>
+    </div>
+    <div id="profile-modal" class="modal-overlay profile-modal">
+        <div class="modal-content profile-content">
+            <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            <div class="profile-tabs">
+                <button class="profile-tab active" data-profile-tab="overview">Обзор</button>
+                <button class="profile-tab" data-profile-tab="courses">Мои курсы</button>
+                <button class="profile-tab" data-profile-tab="favorites">Избранное</button>
+                <button class="profile-tab" data-profile-tab="achievements">Достижения</button>
+                <button class="profile-tab" data-profile-tab="settings">Настройки</button>
+            </div>
+            <div class="profile-tab-content active" id="profile-overview">
+                <div class="profile-header">
+                    <div class="profile-avatar"><div class="avatar-circle" id="user-avatar">М</div></div>
+                    <div class="avatar-edit"><label for="avatar-upload"><i data-lucide="camera"></i></label><input type="file" id="avatar-upload" accept="image/*" style="display: none;"></div>
+                    <div class="profile-info"><h3 id="user-name">Гость</h3><p id="user-email">Войдите в аккаунт</p><div class="profile-level"><div class="level-bar"><div class="level-fill" style="width: 40%"></div></div><span class="level-text" id="level-text">Уровень 1</span></div></div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item"><div class="stat-number" id="lessons-count">0</div><div class="stat-label">Пройдено уроков</div></div>
+                    <div class="stat-item"><div class="stat-number" id="problems-count">0</div><div class="stat-label">Решено задач</div></div>
+                    <div class="stat-item"><div class="stat-number" id="streak-days">0</div><div class="stat-label">Дней подряд</div></div>
+                </div>
+                <div class="profile-section"><h4>Недавняя активность</h4><div class="history-list" id="activity-history"><div class="history-empty">Пока нет активности</div></div></div>
+            </div>
+            <div class="profile-tab-content" id="profile-courses"><h4>Мои курсы</h4><div id="profile-courses-list" class="profile-courses-list"></div></div>
+            <div class="profile-tab-content" id="profile-favorites"><h4>Избранные задачи</h4><div id="favorites-list" class="favorites-list"></div></div>
+            <div class="profile-tab-content" id="profile-achievements"><h4>Достижения</h4><div id="achievements-list" class="achievements-grid"></div></div>
+            <div class="profile-tab-content" id="profile-settings">
+                <h4>Настройки профиля</h4>
+                <div class="settings-form">
+                    <div class="form-group"><label>Имя</label><input type="text" id="settings-name" placeholder="Ваше имя"></div>
+                    <div class="form-group"><label>Новый пароль</label><input type="password" id="settings-password" placeholder="Оставьте пустым"></div>
+                    <div class="form-group"><label>Подтвердите пароль</label><input type="password" id="settings-password-confirm" placeholder="Введите пароль ещё раз"></div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Сохранить изменения</button>
+                    <hr><h5>Экспорт / Импорт данных</h5>
+                    <button class="btn btn-secondary" onclick="exportProfile()">Экспортировать профиль (JSON)</button>
+                    <div style="margin-top: 10px;"><button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Импортировать профиль</button></div>
+                </div>
+            </div>
+            <div class="profile-actions"><button class="btn btn-primary" onclick="logout()">Выйти</button></div>
+        </div>
+    </div>
+    <div id="course-modal" class="modal-overlay" onclick="closeCourseModal(event)">
+        <div class="modal-content course-modal-content">
+            <button class="modal-close" onclick="closeCourseModal(event, true)">&times;</button>
+            <div id="course-modal-body" class="course-modal-body"></div>
+        </div>
+    </div>
+    <div id="formula-modal" class="modal-overlay" onclick="closeFormulaModal(event)">
+        <div class="modal-content formula-content">
+            <button class="modal-close" onclick="closeFormulaModal()">&times;</button>
+            <h2>Справочник формул</h2>
+            <div class="formula-tabs">
+                <button class="formula-tab active" onclick="showFormulaTab('algebra')">Алгебра</button>
+                <button class="formula-tab" onclick="showFormulaTab('geometry')">Геометрия</button>
+                <button class="formula-tab" onclick="showFormulaTab('trigonometry')">Тригонометрия</button>
+            </div>
+            <div id="formula-content" class="formula-content"></div>
+        </div>
+    </div>
+    <div id="video-modal" class="modal-overlay" onclick="closeVideoModal(event)">
+        <div class="modal-content video-content">
+            <button class="modal-close" onclick="closeVideoModal()">&times;</button>
+            <h2>Видеоуроки</h2>
+            <div class="video-list">
+                <div class="video-item" onclick="playVideo('rutube1')">
+                    <div class="video-placeholder">🎥</div>
+                    <h4>Алгебра: Введение в уравнения</h4>
+                </div>
+                <div class="video-item" onclick="playVideo('rutube2')">
+                    <div class="video-placeholder">📐</div>
+                    <h4>Геометрия: Теорема Пифагора</h4>
+                </div>
+                <div class="video-item" onclick="playVideo('rutube3')">
+                    <div class="video-placeholder">📈</div>
+                    <h4>Матанализ: Производная функции</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display: none;">
+    <header class="header">
+        <div class="container header-content animate-fade-down">
+            <div class="logo">Math<span>Master</span></div>
+            <button class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></button>
+            <nav class="nav" id="main-nav">
+                <a href="#hero">Главная</a>
+                <a href="#courses">Курсы</a>
+                <a href="#practice">Практика</a>
+                <a href="#calculator">Калькулятор</a>
+                <a href="#progress">Прогресс</a>
+            </nav>
+            <div class="header-right">
+                <button class="btn btn-outline" onclick="openAuthModal()" id="auth-btn">Войти</button>
+                <button class="btn btn-primary" onclick="openProfileModal()" id="profile-btn" style="display: none;"><i data-lucide="user"></i></button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <section id="hero" class="hero">
+            <div class="container hero-content">
+                <div class="hero-text animate-fade-right">
+                    <h1>Математика <span>становится проще</span></h1>
+                    <p>Интерактивная платформа для изучения математики от основ до продвинутых тем. Индивидуальный подход, игровые элементы и мгновенная проверка решений.</p>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" onclick="startLearning()">Начать обучение</button>
+                        <button class="btn btn-secondary" onclick="scrollToCourses()">Выбрать курс</button>
+                        <div class="hero-badge">🎓 Бесплатно для школьников</div>
+                    </div>
+                </div>
+                <div class="hero-image animate-fade-left floating">
+                    <div class="math-formula">
+                        <div class="formula-box"><span>a² + b² = c²</span></div>
+                        <div class="formula-box"><span>S = πr²</span></div>
+                        <div class="formula-box"><span>(a+b)² = a² + 2ab + b²</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="courses" class="section">
+            <div class="container">
+                <h2 class="section-title text-center scroll-animate">Освой математику<br>от основ к вершинам</h2>
+                <p class="section-subtitle text-center scroll-animate">Пошаговые курсы, адаптированные под ваш уровень</p>
+                <div class="courses-filter scroll-animate">
+                    <div class="filter-tags">
+                        <button class="filter-tag active" data-filter="all">Все курсы</button>
+                        <button class="filter-tag" data-filter="beginner">Для начинающих</button>
+                        <button class="filter-tag" data-filter="intermediate">Средний уровень</button>
+                        <button class="filter-tag" data-filter="advanced">Продвинутый</button>
+                        <button class="filter-tag" data-filter="ege">Подготовка к ЕГЭ</button>
+                    </div>
+                    <div class="filter-search"><i data-lucide="search"></i><input type="text" placeholder="Найти курс по теме..." id="course-search"></div>
+                </div>
+                <div class="courses-grid scroll-animate">
+                    <div class="course-card" data-level="beginner" data-tags="алгебра,уравнения,функции" data-course="algebra">
+                        <div class="course-card-header"><div class="course-badge algebra">Алгебра</div><div class="course-level beginner">Начальный</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle algebra-bg"><i data-lucide="function-square"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Основы алгебры</h3>
+                            <p class="course-description">От уравнений до функций. Идеально для старта в математике.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>1 урок</span></div><div class="stat"><i data-lucide="clock"></i><span>1 час</span></div><div class="stat"><i data-lucide="target"></i><span>3 задачи</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Уравнения</span><span class="skill-tag">Функции</span><span class="skill-tag">Графики</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-primary btn-sm" onclick="openCourseModal('algebra')"><i data-lucide="play"></i> Продолжить</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.8</span></div></div>
+                    </div>
+                    <div class="course-card" data-level="intermediate" data-tags="геометрия,теоремы,фигуры" data-course="geometry">
+                        <div class="course-card-header"><div class="course-badge geometry">Геометрия</div><div class="course-level intermediate">Средний</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle geometry-bg"><i data-lucide="triangle"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Геометрия и пространство</h3>
+                            <p class="course-description">От плоских фигур до тел вращения. Развиваем пространственное мышление.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>1 урок</span></div><div class="stat"><i data-lucide="clock"></i><span>1 час</span></div><div class="stat"><i data-lucide="target"></i><span>3 задачи</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Треугольники</span><span class="skill-tag">Окружность</span><span class="skill-tag">Теоремы</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-outline btn-sm" onclick="openCourseModal('geometry')"><i data-lucide="play-circle"></i> Начать</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.9</span></div></div>
+                    </div>
+                    <div class="course-card" data-level="advanced" data-tags="анализ,производные,интегралы" data-course="calculus">
+                        <div class="course-card-header"><div class="course-badge calculus">Матанализ</div><div class="course-level advanced">Продвинутый</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle calculus-bg"><i data-lucide="sigma"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Математический анализ</h3>
+                            <p class="course-description">Пределы, производные, интегралы. Фундамент высшей математики.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>1 урок</span></div><div class="stat"><i data-lucide="clock"></i><span>25 часов</span></div><div class="stat"><i data-lucide="target"></i><span>200 задач</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Производные</span><span class="skill-tag">Интегралы</span><span class="skill-tag">Пределы</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-outline btn-sm" onclick="openCourseModal('calculus')"><i data-lucide="play-circle"></i> Начать</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.7</span></div></div>
+                    </div>
+                    <div class="course-card" data-level="intermediate" data-tags="вероятность,статистика,комбинаторика" data-course="probability">
+                        <div class="course-card-header"><div class="course-badge probability">Вероятность</div><div class="course-level intermediate">Средний</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle probability-bg"><i data-lucide="dice-5"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Теория вероятностей</h3>
+                            <p class="course-description">Статистика, комбинаторика и анализ данных на реальных примерах.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>15 уроков</span></div><div class="stat"><i data-lucide="clock"></i><span>12 часов</span></div><div class="stat"><i data-lucide="target"></i><span>80 задач</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Вероятность</span><span class="skill-tag">Статистика</span><span class="skill-tag">Анализ данных</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-outline btn-sm" onclick="openCourseModal('probability')"><i data-lucide="play-circle"></i> Начать</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.6</span></div></div>
+                    </div>
+                    <div class="course-card featured" data-level="ege" data-tags="егэ,подготовка,экзамен" data-course="ege">
+                        <div class="course-card-header"><div class="course-badge ege">ЕГЭ</div><div class="course-level advanced">Экзамен</div><div class="featured-badge"><i data-lucide="zap"></i> Популярный</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle ege-bg"><i data-lucide="clipboard-check"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Подготовка к ЕГЭ</h3>
+                            <p class="course-description">Полный разбор задач профильного уровня. Гарантия высокого балла.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>40 уроков</span></div><div class="stat"><i data-lucide="clock"></i><span>35 часов</span></div><div class="stat"><i data-lucide="target"></i><span>300 задач</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Задачи 1-12</span><span class="skill-tag">Задачи 13-19</span><span class="skill-tag">Разбор ошибок</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-primary btn-sm" onclick="openCourseModal('ege')"><i data-lucide="rocket"></i> Интенсив</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.9</span></div></div>
+                    </div>
+                    <div class="course-card" data-level="advanced" data-tags="олимпиады,логика,головоломки" data-course="olympiad">
+                        <div class="course-card-header"><div class="course-badge olympiad">Олимпиады</div><div class="course-level advanced">Продвинутый</div></div>
+                        <div class="course-card-icon"><div class="course-icon-circle olympiad-bg"><i data-lucide="trophy"></i></div><div class="course-progress"><div class="progress-circle" data-progress="0"><svg width="60" height="60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#E5E7EB" stroke-width="12"/><circle cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg><span class="progress-text">0%</span></div></div></div>
+                        <div class="course-card-content">
+                            <h3>Олимпиадная математика</h3>
+                            <p class="course-description">Нестандартные задачи и логические головоломки для развития мышления.</p>
+                            <div class="course-stats"><div class="stat"><i data-lucide="book-open"></i><span>20 уроков</span></div><div class="stat"><i data-lucide="clock"></i><span>16 часов</span></div><div class="stat"><i data-lucide="target"></i><span>100 задач</span></div></div>
+                            <div class="course-skills"><span class="skill-tag">Логика</span><span class="skill-tag">Комбинаторика</span><span class="skill-tag">Геометрия</span></div>
+                        </div>
+                        <div class="course-card-footer"><button class="btn btn-outline btn-sm" onclick="openCourseModal('olympiad')"><i data-lucide="sparkles"></i> Попробовать</button><div class="course-rating"><i data-lucide="star" class="filled"></i><span>4.8</span></div></div>
+                    </div>
+                </div>
+                <div class="courses-more scroll-animate"><button class="btn btn-secondary" onclick="showAllCourses()"><i data-lucide="chevron-down"></i> Показать все курсы</button><div class="courses-counter"><span class="counter-current">6</span> из <span class="counter-total">12</span> курсов показано</div></div>
+            </div>
+        </section>
+        <section id="practice" class="section practice-section">
+            <div class="container">
+                <h2 class="section-title text-center scroll-animate">Интерактивная практика</h2>
+                <p class="section-subtitle text-center scroll-animate">Решайте задачи с мгновенной проверкой и подсказками</p>
+                <div class="practice-container scroll-animate">
+                    <div class="problem-card">
+                        <div class="problem-header"><span class="problem-category">Алгебра • Уравнения</span><span class="problem-difficulty easy">Лёгкая</span></div>
+                        <div class="problem-content">
+                            <h4>Задача #1</h4>
+                            <div class="problem-text" id="problem-text">Решите уравнение: \(2x^2 - 5x + 3 = 0\)</div>
+                            <div class="solution-input"><label>Ваш ответ:</label><div class="input-group"><input type="text" id="answer-input" placeholder="x = ..."><button class="btn btn-primary" onclick="checkAnswer()">Проверить</button></div></div>
+                            <div class="hint-section"><button class="hint-btn" onclick="toggleHint()"><i data-lucide="lightbulb"></i> Показать подсказку</button><div class="hint-content" id="hint-content" style="display: none;">Используйте формулу дискриминанта: \(D = b^2 - 4ac\)</div></div>
+                            <div class="solution-steps" id="solution-steps" style="display: none;"></div>
+                            <div class="problem-extra"><button class="btn btn-outline btn-sm" onclick="saveToFavorites()"><i data-lucide="heart"></i> В избранное</button></div>
+                        </div>
+                        <div class="problem-actions"><button class="btn btn-secondary" onclick="nextProblem()">Следующая задача</button><button class="btn btn-outline" onclick="generateSimilar()">Похожая задача</button></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="calculator" class="section calculator-section">
+            <div class="container">
+                <h2 class="section-title text-center scroll-animate">Умный калькулятор</h2>
+                <p class="section-subtitle text-center scroll-animate">Решает уравнения, строит графики и объясняет шаги</p>
+                <div class="calculator-container scroll-animate">
+                    <div class="calculator-grid">
+                        <div class="calculator-input">
+                            <div class="calc-display"><input type="text" id="calc-input" placeholder="Введите выражение, например: 2x+5=13"><div class="calc-buttons"><button class="calc-btn" onclick="addToInput('^')">^</button><button class="calc-btn" onclick="addToInput('√')">√</button><button class="calc-btn" onclick="addToInput('π')">π</button><button class="calc-btn" onclick="clearInput()">C</button></div></div>
+                            <div class="calc-keypad">
+                                <button class="keypad-btn" onclick="addToInput('7')">7</button><button class="keypad-btn" onclick="addToInput('8')">8</button><button class="keypad-btn" onclick="addToInput('9')">9</button><button class="keypad-btn operator" onclick="addToInput('+')">+</button>
+                                <button class="keypad-btn" onclick="addToInput('4')">4</button><button class="keypad-btn" onclick="addToInput('5')">5</button><button class="keypad-btn" onclick="addToInput('6')">6</button><button class="keypad-btn operator" onclick="addToInput('-')">-</button>
+                                <button class="keypad-btn" onclick="addToInput('1')">1</button><button class="keypad-btn" onclick="addToInput('2')">2</button><button class="keypad-btn" onclick="addToInput('3')">3</button><button class="keypad-btn operator" onclick="addToInput('*')">×</button>
+                                <button class="keypad-btn" onclick="addToInput('0')">0</button><button class="keypad-btn" onclick="addToInput('.')">.</button><button class="keypad-btn" onclick="addToInput('(')">(</button><button class="keypad-btn operator" onclick="addToInput('/')">÷</button>
+                            </div>
+                            <button class="btn btn-primary calc-equal" onclick="calculate()"><i data-lucide="equal"></i> Решить</button>
+                        </div>
+                        <div class="calculator-output">
+                            <div class="output-tabs"><button class="output-tab active" data-tab="result">Результат</button><button class="output-tab" data-tab="steps">Шаги решения</button><button class="output-tab" data-tab="graph">График</button></div>
+                            <div class="output-content">
+                                <div id="calc-result" class="output-tab-content active"><div class="result-placeholder"><i data-lucide="calculator"></i><p>Введите выражение для решения</p></div></div>
+                                <div id="calc-steps" class="output-tab-content"><div class="steps-placeholder">Здесь появятся шаги решения</div></div>
+                                <div id="calc-graph" class="output-tab-content"><div class="graph-placeholder"><i data-lucide="trending-up"></i><p>График функции</p></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="progress" class="section progress-section" style="display: none;">
+            <div class="container">
+                <h2 class="section-title text-center">Мой прогресс</h2>
+                <div class="progress-dashboard">
+                    <div class="progress-card"><div class="progress-icon"><i data-lucide="trending-up"></i></div><h4>Общая статистика</h4><div class="progress-stats"><div class="stat-row"><span>Всего решено:</span><span class="stat-value" id="total-solved">0 задач</span></div><div class="stat-row"><span>Точность:</span><span class="stat-value" id="accuracy">0%</span></div><div class="stat-row"><span>Время обучения:</span><span class="stat-value" id="learning-time">0 ч</span></div></div></div>
+                    <div class="progress-card"><div class="progress-icon"><i data-lucide="bar-chart"></i></div><h4>Распределение по темам</h4><canvas id="topics-chart" style="max-height: 200px;"></canvas></div>
+                    <div class="progress-card"><div class="progress-icon"><i data-lucide="calendar"></i></div><h4>Активность (последние 90 дней)</h4><div id="activity-calendar" class="activity-calendar"></div></div>
+                </div>
+            </div>
+        </section>
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-col"><div class="logo">Math<span>Master</span></div><p class="footer-desc">Интерактивная платформа для изучения математики. Сделаем математику понятной и интересной!</p></div>
+                    <div class="footer-col"><h4>Курсы</h4><a href="#" onclick="openCourseModal('algebra')">Алгебра</a><a href="#" onclick="openCourseModal('geometry')">Геометрия</a><a href="#" onclick="openCourseModal('calculus')">Матанализ</a><a href="#" onclick="openCourseModal('ege')">Подготовка к ЕГЭ</a></div>
+                    <div class="footer-col"><h4>Ресурсы</h4><a href="#practice">Практика</a><a href="#calculator">Калькулятор</a><a href="#" onclick="openFormulaBook()">Справочник формул</a><a href="#" onclick="openVideoLessons()">Видеоуроки</a></div>
+                    <div class="footer-col"><h4>Контакты</h4><div class="social-links"><a href="#"><i data-lucide="mail"></i></a><a href="#"><i data-lucide="message-circle"></i></a><a href="#"><i data-lucide="youtube"></i></a><a href="#"><i data-lucide="github"></i></a></div><p class="footer-email">support@mathmaster.ru</p></div>
+                </div>
+                <div class="footer-bottom"><p>© 2026 MathMaster. Образовательный проект.</p><p>Математика для всех возрастов и уровней</p></div>
+            </div>
+        </footer>
+    </main>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkAuthState();
+            animateProgressCircles();
+            if (window.MathJax) MathJax.typesetPromise();
+        });
+    </script>
+</body>
+</html>
